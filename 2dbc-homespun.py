@@ -8,26 +8,28 @@ height = size+1
 width = size+1
 
 # Get subdivision sizes
-n = 2**np.floor(np.log(height)/np.log(2)) # Greatest power of 2 less than or equal to canvas
+n = 2**np.floor(np.log(height)/np.log(2))  # Greatest power of 2 less than or equal to canvas
 # Extract the exponent
 n = int(np.log(n)/np.log(2))
-sizes = 2**np.arange(n-1, 0, -1)
-boxcounts = {size: 0 for size in sizes}
+boxes = 2**np.arange(n-1, 0, -1)
+boxcounts = {box: 0 for box in boxes}  # Dictionary to store counts for each box size
 
 # Load image
 file = 's2_d1.8.png'
 canvas = cv2.imread('sample_fractals/' + file, 3)
-canvas = cv2.resize(canvas, dsize=[height, width], interpolation=cv2.INTER_AREA)
+canvas = cv2.resize(canvas, dsize=[width, height], interpolation=cv2.INTER_AREA)
 # Specify a threshold 0-255
 threshold = 128
-# make all pixels < threshold black
-binarized = canvas > threshold
+# Make all pixels 0-1
+binarized = canvas / 255
 
+# 2d box counting function
+def boxcount2d(sizes, save=False, visualize=False):
+    for s in sizes:
 
-def boxcount2d(subdiv):
-    for s in subdiv:
         # Reset box counter
         bc = 0
+
         # Make list of box corners
         corners = []
         for y in range(0, height, int(height/s)):
@@ -43,31 +45,31 @@ def boxcount2d(subdiv):
 
         boxcounts[s] = bc
 
-        cv2.imshow('img', canvas)
-        cv2.waitKey(16)
+        if visualize:
+            cv2.imshow('img', canvas)
+            cv2.waitKey(16)
+
+        if save:
+            cv2.imwrite('output/' + file, canvas)
 
     return canvas, boxcounts
 
-boxes, boxcounts = boxcount2d(sizes)
 
-#cv2.imwrite('output/' + file, boxes)
+image, counts = boxcount2d(boxes, visualize=True)
+print(counts)
 
-print(boxcounts)
-
-
-
-# plot
-x = [x for x in boxcounts.keys()]
-y = [y for y in boxcounts.values()]
+# Get slope and plot
+x = [x for x in counts.keys()]
+y = [y for y in counts.values()]
 
 m, b = np.polyfit(np.log(x), np.log(y), 1)
+print(m)
 
 #plt.xscale("log")
 #plt.yscale("log")
 
-plt.plot(np.log(sizes), m*np.log(sizes)+b, label=f"{round(m, 2)}")
-
+plt.plot(np.log(x), m*np.log(x)+b, label=f"{round(m, 2)}")
 plt.scatter(np.log(x), np.log(y))
-leg = plt.legend()
 
+leg = plt.legend()
 plt.show()
