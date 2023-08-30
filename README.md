@@ -1,2 +1,2 @@
 # fractal-tools
-Scripts for generating fractals.
+Scripts for generating statistical fractal images and animations.
